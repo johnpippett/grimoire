@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://github.com/johnpippett/grimoire/blob/main/logo.jpg?raw=true" alt="Grimoire" width="100%" />
+  <img src="https://github.com/johnpippett/grimoire/blob/main/logo.jpg?raw=true" alt="Grimoire" width="60%" />
 </p>
 
-# Grimoire — Agent Project Library
+<h1 align="center">Grimoire — Agent Project Library</h1>
 
 **A project library that every AI coding agent reads from and writes to — durable, searchable, and living beside the code.**
 
