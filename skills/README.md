@@ -5,7 +5,7 @@ should inspect matching `skills/*/SKILL.md` files before acting.
 
 Common defaults:
 
-- Start with `project-intake`.
-- Use `project-wiki-memory` for meaningful project changes.
+- Start with `grimoire-intake`.
+- Use `grimoire-update` for meaningful project changes.
 
 Add project-specific skills as needed — each is a folder with a `SKILL.md`.

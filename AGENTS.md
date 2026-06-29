@@ -15,7 +15,7 @@
 
 This project is the canonical home for ...
 
-## Wiki Documentation Gate
+## Grimoire Gate
 
 Agents working in this repo must maintain the project wiki in `wiki/` using the
 decimal numbering system described in `wiki/README.md`.

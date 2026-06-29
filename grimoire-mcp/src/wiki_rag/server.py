@@ -1,9 +1,9 @@
-"""MCP server entry point for wiki-rag-mcp.
+"""MCP server entry point for grimoire-mcp.
 
-Minimal standalone server exposing RAG over project wiki folders (under
-~/Coding by default). Core tools: list_projects, query_wiki, reindex_project.
+Minimal standalone server exposing RAG over project wiki folders.
+Core tools: list_projects, query_wiki, reindex_project.
 
-Speaks stdio so it plugs into any MCP harness (OpenCode, Grok, Cursor, etc.).
+Speaks stdio so it plugs into any MCP harness (Claude, Cursor, OpenCode, etc.).
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from .config import Project, Registry, load_registry
 
 logger = logging.getLogger("wiki_rag")
 
-SERVER_NAME = "wiki-rag-mcp"
+SERVER_NAME = "grimoire-mcp"
 SERVER_VERSION = "0.1.0"
 
 # Module-level cache of the registry. Cheap to build (just ``os.walk``), but
@@ -310,14 +310,14 @@ async def _run() -> None:
 def main() -> None:
     import sys as _sys
     if len(_sys.argv) > 1 and _sys.argv[1] in {"--help", "-h", "help"}:
-        print("wiki-rag-mcp: MCP server for per-project wiki RAG.")
-        print("Usage: wiki-rag-mcp   (runs as stdio MCP server)")
-        print("       wiki-rag-mcp reindex [project|*]   (reindex without MCP)")
+        print("grimoire-mcp: MCP server for per-project wiki RAG.")
+        print("Usage: grimoire-mcp   (runs as stdio MCP server)")
+        print("       grimoire-mcp reindex [project|*]   (reindex without MCP)")
         print("Env: WIKI_RAG_HOME, WIKI_RAG_PROJECTS_ROOT, WIKI_RAG_LOG")
         print("See README.md for OpenCode config and tool list.")
         _sys.exit(0)
     if len(_sys.argv) > 1 and _sys.argv[1] in {"--version", "-v"}:
-        print(f"wiki-rag-mcp {SERVER_VERSION}")
+        print(f"grimoire-mcp {SERVER_VERSION}")
         _sys.exit(0)
     if len(_sys.argv) > 1 and _sys.argv[1] == "reindex":
         # Standalone reindex CLI (no MCP needed)

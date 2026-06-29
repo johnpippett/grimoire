@@ -1,8 +1,8 @@
-# Agent Wiki System — Starter Kit
+# Grimoire — Agent Project Library
 
-**Give every AI coding agent durable, searchable, project-local memory that survives chat sessions.**
+**A project library that every AI coding agent reads from and writes to — durable, searchable, and living beside the code.**
 
-This is a three-layer system that turns your project's `wiki/` folder into the canonical memory for every agent that touches your code. Agents read the wiki before they act, write to it when they make meaningful changes, and can search across all your projects with a lightweight MCP server.
+Grimoire is a three-layer system that turns your project's `wiki/` folder into a living library agents consult before they act and contribute to after meaningful changes. Cross-project search comes from a lightweight MCP server.
 
 ---
 
@@ -10,7 +10,7 @@ This is a three-layer system that turns your project's `wiki/` folder into the c
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  Layer 3: wiki-rag-mcp (cross-project search)    │
+│  Layer 3: grimoire-mcp (cross-project search)    │
 │  BM25 over all project wikis — plug into any     │
 │  agent harness (Claude, Cursor, OpenCode, etc.)  │
 ├──────────────────────────────────────────────────┤
@@ -18,13 +18,13 @@ This is a three-layer system that turns your project's `wiki/` folder into the c
 │  Tells every agent: read the wiki before acting, │
 │  write to it after meaningful changes.           │
 ├──────────────────────────────────────────────────┤
-│  Layer 1: Wiki folder (wiki/)                    │
+│  Layer 1: The Library (wiki/)                    │
 │  Decimal-numbered markdown notes.                │
 │  What changed, why, how to verify, rollback.     │
 └──────────────────────────────────────────────────┘
 ```
 
-### Layer 1 — The Wiki Folder
+### Layer 1 — The Library
 
 A `wiki/` directory in your project root with decimal-numbered markdown notes:
 
@@ -48,13 +48,13 @@ Each note is short and covers: **what changed, why it changed, how to verify, ro
 
 ### Layer 2 — The Agent Contract
 
-Two files tell every agent to treat the wiki as mandatory:
+Two files tell every agent to treat the library as mandatory:
 
-- **`AGENTS.md`** — Contains the "Wiki Documentation Gate": agents must read the wiki before editing, write to it after meaningful changes, and report what they changed (or why they didn't).
-- **`skills/project-wiki-memory/SKILL.md`** — The playbook agents follow: inspect → update/create → report.
-- **`skills/project-intake/SKILL.md`** — Orientation: read AGENTS.md, README.md, skills/, and wiki/ before acting.
+- **`AGENTS.md`** — Contains the "Grimoire Gate": agents must read the wiki before editing, write to it after meaningful changes, and report what they changed (or why they didn't).
+- **`skills/grimoire-update/SKILL.md`** — The playbook agents follow: inspect → update/create → report.
+- **`skills/grimoire-intake/SKILL.md`** — Orientation: read AGENTS.md, README.md, skills/, and wiki/ before acting.
 
-### Layer 3 — Cross-Project Search (wiki-rag-mcp)
+### Layer 3 — Cross-Project Search (grimoire-mcp)
 
 A standalone [MCP](https://modelcontextprotocol.io/) server that indexes all your project wikis with BM25 (no embeddings, no GPU, deterministic) and exposes three tools to agents:
 
@@ -66,7 +66,7 @@ A standalone [MCP](https://modelcontextprotocol.io/) server that indexes all you
 
 ## Quick Start
 
-### 1. Add the wiki to your project
+### 1. Add the library to your project
 
 Copy `wiki-template/` into your project root as `wiki/`:
 
@@ -83,14 +83,14 @@ cp AGENTS.md my-project/
 cp -r skills/ my-project/skills/
 ```
 
-Customize `AGENTS.md` with any project-specific rules above the Wiki Documentation Gate section.
+Customize `AGENTS.md` with any project-specific rules above the Grimoire Gate section.
 
 ### 3. (Optional) Set up cross-project search
 
-The `wiki-rag-mcp/` server lets agents search across all your projects. See its [README](wiki-rag-mcp/README.md) for setup.
+The `grimoire-mcp/` server lets agents search across all your projects. See its [README](grimoire-mcp/README.md) for setup.
 
 ```bash
-cd wiki-rag-mcp
+cd grimoire-mcp
 uv sync
 ```
 
@@ -99,9 +99,9 @@ Then add to your agent's MCP config:
 ```json
 {
   "mcpServers": {
-    "wiki-rag-mcp": {
+    "grimoire-mcp": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/wiki-rag-mcp", "wiki-rag-mcp"]
+      "args": ["run", "--directory", "/path/to/grimoire-mcp", "grimoire-mcp"]
     }
   }
 }
@@ -112,10 +112,10 @@ Set `WIKI_RAG_PROJECTS_ROOT` to wherever you keep your projects (default: `~/pro
 ### 4. Start using it
 
 The next time an agent starts work in your project, it will:
-1. Read `AGENTS.md` → see the Wiki Documentation Gate
-2. Run the `project-intake` skill → read wiki/ for context
+1. Read `AGENTS.md` → see the Grimoire Gate
+2. Run the `grimoire-intake` skill → read wiki/ for context
 3. Do the work
-4. Run the `project-wiki-memory` skill → create or update a wiki note
+4. Run the `grimoire-update` skill → create or update a wiki note
 5. Report which note was changed
 
 ---
@@ -126,14 +126,14 @@ Here's the flow on any meaningful change:
 
 ```
 Agent starts work
-  └─ skills/project-intake fires
+  └─ skills/grimoire-intake fires
        └─ Reads AGENTS.md, README.md, wiki/README.md, relevant wiki notes
             └─ Agent now has project context
 
 Agent does work (edit code, change config, update deps, etc.)
 
 Agent finishes
-  └─ skills/project-wiki-memory fires
+  └─ skills/grimoire-update fires
        └─ Checks wiki/ for existing notes on the topic
        └─ Updates existing note OR creates next decimal note
        └─ Updates 12.01 Session Log Index
@@ -148,7 +148,7 @@ A week later, another agent starts work. It reads the wiki, finds `21.03`, and i
 
 ### Why not just use chat history?
 
-Chat sessions are ephemeral. They die when the context window fills, when you switch models, or when you start a new session. The wiki is **durable project memory** — it lives in the repo beside the code.
+Chat sessions are ephemeral. They die when the context window fills, when you switch models, or when you start a new session. The wiki is **durable project knowledge** — it lives in the repo beside the code.
 
 ### Why decimal numbering?
 
@@ -172,11 +172,11 @@ Project knowledge belongs beside the project. When you move, archive, or share a
 | File | Purpose |
 |---|---|
 | `README.md` | This guide |
-| `AGENTS.md` | Template agent instructions with Wiki Documentation Gate |
+| `AGENTS.md` | Template agent instructions with Grimoire Gate |
 | `wiki-template/` | Drop-in wiki folder structure |
-| `skills/project-wiki-memory/SKILL.md` | Agent playbook for wiki updates |
-| `skills/project-intake/SKILL.md` | Agent playbook for project orientation |
-| `wiki-rag-mcp/` | Standalone MCP server for cross-project search |
+| `skills/grimoire-update/SKILL.md` | Agent playbook for wiki updates |
+| `skills/grimoire-intake/SKILL.md` | Agent playbook for project orientation |
+| `grimoire-mcp/` | Standalone MCP server for cross-project search |
 
 ---
 
@@ -185,8 +185,8 @@ Project knowledge belongs beside the project. When you move, archive, or share a
 You don't need all three layers on day one:
 
 1. **Start with just the wiki folder.** Even without agent enforcement, having a place to write down what changed and why is valuable.
-2. **Add AGENTS.md + skills.** This is the force-multiplier — agents start reading and writing the wiki automatically.
-3. **Add wiki-rag-mcp when you have multiple projects.** Cross-project search becomes useful when you have 5+ wikis and agents need to find information across them.
+2. **Add AGENTS.md + skills.** This is the force-multiplier — agents start reading and writing the library automatically.
+3. **Add grimoire-mcp when you have multiple projects.** Cross-project search becomes useful when you have 5+ wikis and agents need to find information across them.
 
 ---
 
@@ -203,7 +203,7 @@ The system is model-agnostic and harness-agnostic. It works with any agent that 
 
 For harnesses that don't natively read `AGENTS.md`, rename it to the convention file that harness expects, or symlink it.
 
-The `wiki-rag-mcp` server works with any harness that supports MCP tools (Claude, Cursor, OpenCode, Grok, etc.).
+The `grimoire-mcp` server works with any harness that supports MCP tools (Claude, Cursor, OpenCode, Grok, etc.).
 
 ---
 

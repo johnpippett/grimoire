@@ -1,9 +1,9 @@
 ---
-name: project-wiki-memory
+name: grimoire-update
 description: Use when a project change affects code, config, workflow, architecture, deployment, integration, debugging, or policy.
 ---
 
-# Project Wiki Memory
+# Grimoire Update
 
 Project knowledge stays beside the project. Use the repo-local `wiki/` before
 central notes.

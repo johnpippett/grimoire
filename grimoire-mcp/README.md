@@ -1,4 +1,4 @@
-# wiki-rag-mcp
+# grimoire-mcp
 
 **One standalone MCP server for RAG over your project wiki folders.**
 
@@ -27,17 +27,17 @@ Uses LlamaIndex + BM25 (no embeddings, fast, deterministic, local-only).
 ## Quick Start
 
 ```bash
-cd wiki-rag-mcp
+cd grimoire-mcp
 
 # Install / run with uv (recommended)
 uv sync
-uv run wiki-rag-mcp
+uv run grimoire-mcp
 
 # Or pip
 python -m venv .venv
 . .venv/bin/activate
 pip install -e .
-wiki-rag-mcp
+grimoire-mcp
 ```
 
 The server speaks stdio MCP. It will log to `~/.wiki-rag/logs/server.log`.
@@ -75,9 +75,9 @@ Add to your MCP client config:
 ```json
 {
   "mcpServers": {
-    "wiki-rag-mcp": {
+    "grimoire-mcp": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/wiki-rag-mcp", "wiki-rag-mcp"]
+      "args": ["run", "--directory", "/path/to/grimoire-mcp", "grimoire-mcp"]
     }
   }
 }
@@ -96,7 +96,7 @@ Restart the client after adding.
 ## Quick Reindex (CLI, no MCP needed)
 
 ```bash
-uv run --directory /path/to/wiki-rag-mcp wiki-rag-mcp reindex "*"
+uv run --directory /path/to/grimoire-mcp grimoire-mcp reindex "*"
 ```
 
 ## Security

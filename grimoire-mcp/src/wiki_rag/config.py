@@ -1,4 +1,4 @@
-"""Project discovery and configuration for wiki-rag-mcp.
+"""Project discovery and configuration for grimoire-mcp.
 
 Discovers project wiki folders under a configurable root directory (set via
 ``WIKI_RAG_PROJECTS_ROOT`` env var, default ``~/projects``). Each

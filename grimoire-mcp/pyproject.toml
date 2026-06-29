@@ -1,7 +1,7 @@
 [project]
-name = "wiki-rag-mcp"
+name = "grimoire-mcp"
 version = "0.1.0"
-description = "Standalone MCP server for RAG over project wiki folders (LlamaIndex + BM25). Plug-and-play into any agent harness."
+description = "Standalone MCP server for RAG over project wiki folders (LlamaIndex + BM25). Part of the Grimoire agent project library."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-wiki-rag-mcp = "wiki_rag.server:main"
+grimoire-mcp = "wiki_rag.server:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,9 +1,9 @@
 ---
-name: project-intake
+name: grimoire-intake
 description: Use when starting work in a local project, switching agents or models, or handling an unfamiliar repo or folder.
 ---
 
-# Project Intake
+# Grimoire Intake
 
 Use this before acting inside a project. It works for any coding agent.
 

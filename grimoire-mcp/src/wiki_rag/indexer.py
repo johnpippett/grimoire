@@ -1,4 +1,4 @@
-"""Indexing and retrieval for wiki-rag-mcp.
+"""Indexing and retrieval for grimoire-mcp.
 
 We persist the raw documents per project (JSONL of file text + metadata) and
 build a LlamaIndex ``BM25Retriever`` on top of those nodes at query time.
