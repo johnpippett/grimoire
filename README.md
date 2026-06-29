@@ -1,5 +1,7 @@
 # Grimoire — Agent Project Library
 
+<img src="https://raw.githubusercontent.com/johnpippett/grimoire/main/logo.jpg" alt="Grimoire" width="200" />
+
 **A project library that every AI coding agent reads from and writes to — durable, searchable, and living beside the code.**
 
 Grimoire is a three-layer system that turns your project's `wiki/` folder into a living library agents consult before they act and contribute to after meaningful changes. Cross-project search comes from a lightweight MCP server.
