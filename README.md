@@ -30,11 +30,16 @@ Grimoire is a three-layer system that turns your project's `wiki/` folder into a
 
 ### Layer 1 — The Library
 
-A `wiki/` directory in your project root with decimal-numbered markdown notes:
+A `wiki/` directory in your project root with decimal-numbered markdown notes,
+inspired by [Johnny.Decimal](https://johnnydecimal.com/). The tens digit is a
+**category** (10-19, 20-29, ...) and the decimal is an **ID** within it:
 
 ```
 wiki/
 ├── README.md                          # Numbering system + agent rules
+├── 00-09 System & Meta/               # Wiki index, project conventions
+│   ├── 01 Project Conventions/
+│   └── 02 Wiki Index/
 ├── 10-19 Conversations & Decisions/
 │   ├── 11 Key Decisions/              # 11.01, 11.02, ...
 │   └── 12 Session Logs/               # 12.01 Session Log Index, 12.02, ...
@@ -44,9 +49,14 @@ wiki/
 ├── 30-39 Integrations & Tooling/
 │   ├── 31 Tool Configs/               # 31.01, 31.02, ...
 │   └── 32 Integration Notes/          # 32.01, ...
+├── 40-89 ···························  # Your project-specific categories
+│                                       #   (create folders as needed)
 └── 90-99 Archive/                     # Retired notes
     └── 91 Historical Scripts/
 ```
+
+The full 00-99 number space is available. Projects add their own categories in
+the 40-89 range — just create a folder and start numbering from `.01`.
 
 Each note is short and covers: **what changed, why it changed, how to verify, rollback notes when relevant.**
 
@@ -170,7 +180,16 @@ Chat sessions are ephemeral. They die when the context window fills, when you sw
 
 ### Why decimal numbering?
 
-Simple, sortable, and unambiguous. `11.01` comes before `11.02`. No date stamps, no titles in filenames — just numbers. The folder structure provides the topic category. This makes it trivial for agents to find the next available number and for humans to scan.
+Simple, sortable, and unambiguous. `11.01` comes before `11.02`. No date stamps,
+no titles in filenames — just numbers. The folder structure provides the topic
+category. This makes it trivial for agents to find the next available number and
+for humans to scan.
+
+The numbering is inspired by [Johnny.Decimal](https://johnnydecimal.com/), a
+system for organizing information where the tens digit is a **category** area
+(10-19, 20-29, ... up to 99) and the decimal is an **ID** within that category.
+Grimoire pre-defines categories for common project needs and leaves the 40-89
+range open for project-specific use.
 
 ### Why BM25 instead of embeddings?
 

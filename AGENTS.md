@@ -5,6 +5,10 @@ Claude Code, Cursor, Copilot, Aider, OpenCode, Codex, and any other harness —
 rename it to the convention your harness expects if needed (CLAUDE.md,
 .cursorrules, .github/copilot-instructions.md, AIDER.md, etc.).
 
+The decimal wiki numbering is inspired by [Johnny.Decimal](https://johnnydecimal.com/)
+— a simple, sortable system where the tens digit is a category area and the
+decimal is an ID within it. The full 00-99 range is available.
+
 ---
 
 ## Bootstrap (first time only)
@@ -17,6 +21,9 @@ If `wiki/` does not exist in this project root, bootstrap it now:
      ```
      wiki/
      ├── README.md                    (copy numbering scheme from wiki-template/README.md)
+     ├── 00-09 System & Meta/
+     │   ├── 01 Project Conventions/
+     │   └── 02 Wiki Index/
      ├── 10-19 Conversations & Decisions/
      │   ├── 11 Key Decisions/
      │   └── 12 Session Logs/
@@ -27,6 +34,7 @@ If `wiki/` does not exist in this project root, bootstrap it now:
      ├── 30-39 Integrations & Tooling/
      │   ├── 31 Tool Configs/
      │   └── 32 Integration Notes/
+     ├── 40-89 ···  (project-specific categories — add folders as needed)
      └── 90-99 Archive/
          └── 91 Historical Scripts/
      ```
@@ -107,13 +115,19 @@ After meaningful changes (code, config, workflow, architecture, deployment,
 integration, debugging, or policy):
 
 1. **Inspect** `wiki/README.md` for the numbering scheme and scan the relevant
-   topic folder for existing notes:
+   topic folder for existing notes. The full 00-99 number space is available;
+   these categories are predefined:
+   - `00-09 System & Meta/01 Project Conventions/`
+   - `00-09 System & Meta/02 Wiki Index/`
    - `10-19 Conversations & Decisions/11 Key Decisions/`
    - `10-19 Conversations & Decisions/12 Session Logs/`
    - `20-29 Implementation & Operations/21 Implementation Notes/`
    - `20-29 Implementation & Operations/22 Workflows/`
    - `30-39 Integrations & Tooling/31 Tool Configs/`
    - `30-39 Integrations & Tooling/32 Integration Notes/`
+   - `90-99 Archive/91 Historical Scripts/`
+   - `40-89` — available for project-specific categories; create a folder
+     and start numbering from `.01` when needed.
 
 2. **Update or create** a decimal-numbered note:
    - If a note already covers the topic, **update it in place** (append to it,

@@ -3,8 +3,18 @@
 This repo keeps durable project documentation in decimal-numbered markdown files.
 Use it as the canonical record of what changed, why, and how to verify it.
 
+The numbering system is inspired by [Johnny.Decimal](https://johnnydecimal.com/)
+— a simple, sortable way to organize information where the tens digit is a
+**category** (10-19, 20-29, ...) and the decimal is an **ID** within that
+category (11.01, 11.02, ...).
+
 ## Numbering
 
+The full 00-99 number space is available. Predefined categories:
+
+- `00-09 System & Meta/` — wiki index, project conventions, agent contract
+  - `01 Project Conventions/`
+  - `02 Wiki Index/`
 - `10-19 Conversations & Decisions/`
   - `11 Key Decisions/`
   - `12 Session Logs/`
@@ -14,8 +24,17 @@ Use it as the canonical record of what changed, why, and how to verify it.
 - `30-39 Integrations & Tooling/`
   - `31 Tool Configs/`
   - `32 Integration Notes/`
+- `40-49` — available for project-specific use
+- `50-59` — available for project-specific use
+- `60-69` — available for project-specific use
+- `70-79` — available for project-specific use
+- `80-89` — available for project-specific use
 - `90-99 Archive/`
-  - historical notes and retired scripts
+  - `91 Historical Scripts/`
+  - historical notes and retired content
+
+Projects can add their own categories in the unused ranges (40-89). Create a
+folder with a descriptive name and start numbering from `.01`.
 
 File names use decimal numbers:
 
