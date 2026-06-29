@@ -1,7 +1,8 @@
 # Project Skills
 
-This folder contains model-agnostic project skills. Any agent working here
-should inspect matching `skills/*/SKILL.md` files before acting.
+This folder contains this repo's own internal skills for agents working on
+Grimoire itself. Consumer projects do **not** need this folder — everything
+is inlined in `AGENTS.md`.
 
 Common defaults:
 

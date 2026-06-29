@@ -18,9 +18,9 @@ Grimoire is a three-layer system that turns your project's `wiki/` folder into a
 │  BM25 over all project wikis — plug into any     │
 │  agent harness (Claude, Cursor, OpenCode, etc.)  │
 ├──────────────────────────────────────────────────┤
-│  Layer 2: Agent Contract (AGENTS.md + skills/)   │
-│  Tells every agent: read the wiki before acting, │
-│  write to it after meaningful changes.           │
+│  Layer 2: Agent Contract (AGENTS.md)             │
+│  One self-contained file: bootstrap, Grimoire     │
+│  Gate, pre-work checklist, wiki update workflow.  │
 ├──────────────────────────────────────────────────┤
 │  Layer 1: The Library (wiki/)                    │
 │  Decimal-numbered markdown notes.                │
@@ -52,11 +52,11 @@ Each note is short and covers: **what changed, why it changed, how to verify, ro
 
 ### Layer 2 — The Agent Contract
 
-Two files tell every agent to treat the library as mandatory:
+One file tells every agent everything it needs:
 
-- **`AGENTS.md`** — Contains the "Grimoire Gate": agents must read the wiki before editing, write to it after meaningful changes, and report what they changed (or why they didn't).
-- **`skills/grimoire-update/SKILL.md`** — The playbook agents follow: inspect → update/create → report.
-- **`skills/grimoire-intake/SKILL.md`** — Orientation: read AGENTS.md, README.md, skills/, and wiki/ before acting.
+- **`AGENTS.md`** — The single entry point. Contains bootstrap instructions, the "Grimoire Gate" contract (read wiki before editing, write to it after), a pre-work checklist, the wiki update workflow, and rules for when to skip. Self-contained — no other files required.
+
+A **`setup.sh`** script bootstraps the `wiki/` directory into any project in one command, for both humans and agents.
 
 ### Layer 3 — Cross-Project Search (grimoire-mcp)
 
@@ -72,22 +72,31 @@ A standalone [MCP](https://modelcontextprotocol.io/) server that indexes all you
 
 ### 1. Add the library to your project
 
-Copy `wiki-template/` into your project root as `wiki/`:
+Run the bootstrap script from within the grimoire repo:
 
 ```bash
-cp -r wiki-template/ my-project/wiki/
+./setup.sh /path/to/your-project
+```
+
+Or, if you're already in your project directory, copy the template manually:
+
+```bash
+cp -r /path/to/grimoire/wiki-template wiki
 ```
 
 ### 2. Add the agent contract
 
-Copy `AGENTS.md` and `skills/` into your project root:
+Copy `AGENTS.md` into your project root. That's it — it's self-contained:
 
 ```bash
-cp AGENTS.md my-project/
-cp -r skills/ my-project/skills/
+cp /path/to/grimoire/AGENTS.md your-project/
 ```
 
-Customize `AGENTS.md` with any project-specific rules above the Grimoire Gate section.
+Customize the **Scope** section with a one-line description of your project.
+
+For harnesses that don't natively read `AGENTS.md`, rename it to the convention
+that harness expects: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`,
+`AIDER.md`, etc.
 
 ### 3. (Optional) Set up cross-project search
 
@@ -115,12 +124,15 @@ Set `WIKI_RAG_PROJECTS_ROOT` to wherever you keep your projects (default: `~/pro
 
 ### 4. Start using it
 
-The next time an agent starts work in your project, it will:
-1. Read `AGENTS.md` → see the Grimoire Gate
-2. Run the `grimoire-intake` skill → read wiki/ for context
-3. Do the work
-4. Run the `grimoire-update` skill → create or update a wiki note
-5. Report which note was changed
+The next time an agent starts work in your project, it reads `AGENTS.md` and:
+
+1. If `wiki/` doesn't exist → runs bootstrap (from the Bootstrap section)
+2. Follows the Pre-Work Checklist → reads wiki/ for context
+3. Does the work
+4. Follows the Wiki Update Workflow → creates or updates a wiki note
+5. Reports which note was changed
+
+That's it. One file. No harness-specific features needed.
 
 ---
 
@@ -130,21 +142,23 @@ Here's the flow on any meaningful change:
 
 ```
 Agent starts work
-  └─ skills/grimoire-intake fires
-       └─ Reads AGENTS.md, README.md, wiki/README.md, relevant wiki notes
-            └─ Agent now has project context
+  └─ Reads AGENTS.md
+       ├─ If wiki/ doesn't exist: runs bootstrap (setup.sh or manual copy)
+       ├─ Reads wiki/README.md for numbering scheme
+       └─ Scans wiki/ for relevant project context
 
 Agent does work (edit code, change config, update deps, etc.)
 
 Agent finishes
-  └─ skills/grimoire-update fires
-       └─ Checks wiki/ for existing notes on the topic
-       └─ Updates existing note OR creates next decimal note
-       └─ Updates 12.01 Session Log Index
+  └─ Follows Wiki Update Workflow in AGENTS.md
+       ├─ Checks wiki/ for existing notes on the topic
+       ├─ Updates existing note OR creates next decimal note
+       ├─ Updates 12.01 Session Log Index
        └─ Reports: "Updated wiki/20-29.../21.03 Thing I Changed.md"
 ```
 
-A week later, another agent starts work. It reads the wiki, finds `21.03`, and immediately understands what was done and why — no chat history needed.
+A week later, another agent starts work. It reads the wiki, finds `21.03`, and
+immediately understands what was done and why — no chat history needed.
 
 ---
 
@@ -176,11 +190,11 @@ Project knowledge belongs beside the project. When you move, archive, or share a
 | File | Purpose |
 |---|---|
 | `README.md` | This guide |
-| `AGENTS.md` | Template agent instructions with Grimoire Gate |
+| `AGENTS.md` | **Single entry point** — bootstrap, Grimoire Gate, pre-work checklist, wiki update workflow (self-contained, no other files needed) |
+| `setup.sh` | Bootstrap script — copies `wiki-template/` into any project in one command |
 | `wiki-template/` | Drop-in wiki folder structure |
-| `skills/grimoire-update/SKILL.md` | Agent playbook for wiki updates |
-| `skills/grimoire-intake/SKILL.md` | Agent playbook for project orientation |
 | `grimoire-mcp/` | Standalone MCP server for cross-project search |
+| `skills/` | Optional — this repo's own internal skills (not needed by consumer projects; everything is inlined in `AGENTS.md`) |
 
 ---
 
@@ -188,26 +202,41 @@ Project knowledge belongs beside the project. When you move, archive, or share a
 
 You don't need all three layers on day one:
 
-1. **Start with just the wiki folder.** Even without agent enforcement, having a place to write down what changed and why is valuable.
-2. **Add AGENTS.md + skills.** This is the force-multiplier — agents start reading and writing the library automatically.
+1. **Start with just the wiki folder.** Even without agent enforcement, having a place to write down what changed and why is valuable. Run `./setup.sh` or copy `wiki-template/` manually.
+2. **Add AGENTS.md.** This is the force-multiplier — agents start reading and writing the library automatically. One file, self-contained.
 3. **Add grimoire-mcp when you have multiple projects.** Cross-project search becomes useful when you have 5+ wikis and agents need to find information across them.
 
 ---
 
 ## Compatible Agent Harnesses
 
-The system is model-agnostic and harness-agnostic. It works with any agent that reads project-level instruction files:
+The system is harness-agnostic. **`AGENTS.md` is the only file an agent needs to
+read** — it contains bootstrap, intake, and update workflows in one place.
 
-- **Claude Code** (reads `CLAUDE.md`)
-- **Cursor** (reads `.cursorrules` or project instructions)
-- **Codex Desktop** (reads `AGENTS.md`)
-- **OpenCode** (reads `AGENTS.md`)
-- **Aider** (reads `AIDER.md` or convention files)
-- **GitHub Copilot** (reads `.github/copilot-instructions.md`)
+Works with any agent that reads project-level instruction files:
 
-For harnesses that don't natively read `AGENTS.md`, rename it to the convention file that harness expects, or symlink it.
+- **Claude Code** (reads `CLAUDE.md` — rename or symlink `AGENTS.md`)
+- **Cursor** (reads `.cursorrules` — rename or symlink)
+- **Codex Desktop** (reads `AGENTS.md` natively)
+- **OpenCode** (reads `AGENTS.md` natively)
+- **Aider** (reads `AIDER.md` or `CONVENTIONS.md` — rename or symlink)
+- **GitHub Copilot** (reads `.github/copilot-instructions.md` — rename or symlink)
+- **Reasonix** (reads `AGENTS.md` natively)
 
-The `grimoire-mcp` server works with any harness that supports MCP tools (Claude, Cursor, OpenCode, Grok, etc.).
+For harnesses that don't natively read `AGENTS.md`, rename it to the convention
+file that harness expects, or create a symlink.
+
+The `grimoire-mcp` server works with any harness that supports MCP tools (Claude,
+Cursor, OpenCode, Grok, etc.).
+
+### How a user hands this to any agent
+
+The user gives an agent the grimoire repo and says:
+
+> "Set up Grimoire in my project at `/path/to/my-project`."
+
+The agent reads `AGENTS.md`, finds the **Bootstrap** section, runs `./setup.sh`,
+and follows the Pre-Work Checklist. No harness-specific features needed.
 
 ---
 
