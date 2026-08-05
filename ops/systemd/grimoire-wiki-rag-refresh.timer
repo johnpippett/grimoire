@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh Grimoire wiki-RAG at local midnight and noon
+
+[Timer]
+OnCalendar=*-*-* 00,12:00:00
+Persistent=true
+Unit=grimoire-wiki-rag-refresh.service
+
+[Install]
+WantedBy=timers.target

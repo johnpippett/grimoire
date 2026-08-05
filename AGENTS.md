@@ -61,7 +61,8 @@ If `wiki/` already exists, skip bootstrap and proceed to **Pre-Work Checklist**.
 
 <!-- Customize this section for your project -->
 
-This project is the canonical home for ...
+This project is the canonical home for the Grimoire agent project library,
+its per-project wiki contract, and the local grimoire-mcp wiki-RAG service.
 
 ---
 

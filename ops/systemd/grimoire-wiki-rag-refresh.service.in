@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh the local Grimoire wiki-RAG index
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@@PROJECT_DIR@@
+Environment="WIKI_RAG_PROJECTS_ROOT=@@PROJECTS_ROOT@@"
+Environment="WIKI_RAG_HOME=@@INDEX_HOME@@"
+Environment="UV_BIN=@@UV_BIN@@"
+ExecStart=@@PROJECT_DIR@@/scripts/refresh-wiki-rag.sh

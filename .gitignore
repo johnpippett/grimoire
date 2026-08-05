@@ -5,3 +5,5 @@ __pycache__/
 .reasonix/
 reasonix.toml
 
+# Host-specific wiki-RAG collection root and index settings.
+config/wiki-rag.env
