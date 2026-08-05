@@ -83,8 +83,9 @@ Run:
 rg -n 'TBD|TODO|/path/to|CHANGE_ME|REPLACE_ME|\.\.\.' docs config wiki
 ```
 
-Expected: no unresolved setup placeholders; only explanatory ellipses in prose
-are allowed when they do not stand in for a required value.
+Expected: no `TBD`, `TODO`, or unexplained replacement tokens. Public examples
+may use clearly labeled `/path/to/...` values because the exact host paths stay
+out of the public repository; the operator replaces those examples locally.
 
 ### Task 2: Add the portable refresh command
 
