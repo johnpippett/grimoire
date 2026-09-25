@@ -1,12 +1,18 @@
-# Project Skills
+# Project skills
 
-This folder contains this repo's own internal skills for agents working on
-Grimoire itself. Consumer projects do **not** need this folder — everything
-is inlined in `AGENTS.md`.
+These skills help agents work on Grimoire itself. Consumer projects can use the
+portable contract in `AGENTS.md` without installing these skills. The skills
+add detail for harnesses that support them; they do not replace the contract.
 
-Common defaults:
+- Use `grimoire-intake` when an agent works alone or a coordinator assigns
+  work. After a topic change or context loss, an agent that works alone repeats
+  the initial wiki read. A coordinator does the same. A worker may use new,
+  sufficient wiki context and source paths from the coordinator. Read more
+  notes only when needed.
+- Workers return findings and draft wiki changes unless assigned a note. The
+  coordinator assigns note numbers, updates the session log, and makes final
+  wiki edits. It can assign a specific note to a worker.
+- Use `grimoire-update` when work changes project behavior or recorded
+  knowledge.
 
-- Start with `grimoire-intake`.
-- Use `grimoire-update` for meaningful project changes.
-
-Add project-specific skills as needed — each is a folder with a `SKILL.md`.
+Add a skill only when it describes a repeatable project task.

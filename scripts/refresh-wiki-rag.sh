@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Refresh every discovered project index without changing Hermes or source docs.
+# Optionally adopt new projects, then refresh their local search indexes.
 
 set -euo pipefail
 
@@ -17,6 +17,7 @@ fi
 
 PROJECTS_ROOT="${WIKI_RAG_PROJECTS_ROOT:-}"
 INDEX_HOME="${WIKI_RAG_HOME:-${HOME:-}/.wiki-rag}"
+AUTO_SETUP="${WIKI_RAG_AUTO_SETUP:-0}"
 
 fail() {
     printf 'refresh-wiki-rag: %s\n' "$*" >&2
@@ -26,6 +27,7 @@ fail() {
 [[ -n "${PROJECTS_ROOT}" ]] || fail "set WIKI_RAG_PROJECTS_ROOT in ${CONFIG_PATH}"
 [[ -d "${PROJECTS_ROOT}" ]] || fail "project root is not a directory: ${PROJECTS_ROOT}"
 [[ -d "${PROJECT_DIR}/grimoire-mcp" ]] || fail "missing grimoire-mcp package under ${PROJECT_DIR}"
+[[ "${AUTO_SETUP}" == "0" || "${AUTO_SETUP}" == "1" ]] || fail 'WIKI_RAG_AUTO_SETUP must be 0 or 1'
 
 if [[ -n "${UV_BIN:-}" ]]; then
     RESOLVED_UV="${UV_BIN}"
@@ -46,6 +48,11 @@ if [[ "${GRIMOIRE_WIKI_RAG_DRY_RUN:-0}" == "1" ]]; then
     printf 'projects_root=%s\n' "${PROJECTS_ROOT}"
     printf 'index_home=%s\n' "${INDEX_HOME}"
     printf 'uv=%s\n' "${RESOLVED_UV}"
+    if [[ "${AUTO_SETUP}" == "1" ]]; then
+        printf 'command=%q run --directory %q python %q --projects-root %q --apply\n' \
+            "${RESOLVED_UV}" "${PROJECT_DIR}/grimoire-mcp" \
+            "${PROJECT_DIR}/scripts/setup-projects.py" "${PROJECTS_ROOT}"
+    fi
     printf 'command=%q run --directory %q grimoire-mcp reindex %q\n' \
         "${RESOLVED_UV}" "${PROJECT_DIR}/grimoire-mcp" '*'
     exit 0
@@ -63,6 +70,11 @@ printf 'uv=%s\n' "${RESOLVED_UV}"
 
 export WIKI_RAG_PROJECTS_ROOT="${PROJECTS_ROOT}"
 export WIKI_RAG_HOME="${INDEX_HOME}"
+if [[ "${AUTO_SETUP}" == "1" ]]; then
+    "${RESOLVED_UV}" run --directory "${PROJECT_DIR}/grimoire-mcp" \
+        python "${PROJECT_DIR}/scripts/setup-projects.py" \
+        --projects-root "${PROJECTS_ROOT}" --apply
+fi
 "${RESOLVED_UV}" run \
     --directory "${PROJECT_DIR}/grimoire-mcp" \
     grimoire-mcp reindex '*'

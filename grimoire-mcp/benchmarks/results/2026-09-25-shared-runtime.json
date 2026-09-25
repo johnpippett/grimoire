@@ -1,0 +1,239 @@
+{
+  "date": "2026-09-25",
+  "scope": "Replace duplicate local Grimoire stdio servers with one authenticated HTTP runtime.",
+  "startup_regression": {
+    "before": "Server exited before HTTP readiness: 0",
+    "after_passed": true,
+    "note": "The startup regression was written and failed before implementation. The full E2E suite ran after implementation."
+  },
+  "existing_suite": {
+    "command": "cd grimoire-mcp && uv run --locked --with pytest python -m pytest tests ../tests -q",
+    "passed": 34
+  },
+  "end_to_end": {
+    "result": "passed",
+    "setup": {
+      "command": "grimoire-mcp serve-http --port PORT --token-file PATH",
+      "bind": "127.0.0.1 only",
+      "transport": "stateless Streamable HTTP at /mcp",
+      "fixture_fact": "cobalt otter 742",
+      "concurrent_clients": 12,
+      "token_recorded": false,
+      "projects_root": "/tmp/grimoire-e2e-fbpla5cv/projects",
+      "wiki_path": "/tmp/grimoire-e2e-fbpla5cv/projects/fixture/wiki/fact.md",
+      "port": 51609,
+      "token_file_mode": "0600"
+    },
+    "steps": [
+      {
+        "name": "start one HTTP server",
+        "result": "passed",
+        "seconds": 1.16
+      },
+      {
+        "name": "bind only to IPv4 loopback",
+        "result": "passed",
+        "seconds": 0.002
+      },
+      {
+        "name": "reject missing, wrong, Host, and Origin credentials",
+        "result": "passed",
+        "seconds": 0.045
+      },
+      {
+        "name": "initialize MCP and list the three existing tools",
+        "result": "passed",
+        "seconds": 0.016
+      },
+      {
+        "name": "reindex the temporary wiki fixture",
+        "result": "passed",
+        "seconds": 0.142
+      },
+      {
+        "name": "query the indexed known fact",
+        "result": "passed",
+        "seconds": 0.028
+      },
+      {
+        "name": "run 12 concurrent independent MCP clients on one PID",
+        "result": "passed",
+        "seconds": 0.234
+      },
+      {
+        "name": "reject a second listener on the occupied port",
+        "result": "passed",
+        "seconds": 1.471
+      },
+      {
+        "name": "reject an invalid token file at startup",
+        "result": "passed",
+        "seconds": 2.74
+      },
+      {
+        "name": "restart and query the persisted index without reindexing",
+        "result": "passed",
+        "seconds": 1.357
+      }
+    ],
+    "results": {
+      "http_security_statuses": {
+        "missing_token": 401,
+        "wrong_token": 401,
+        "bad_origin": 403,
+        "bad_host": 421
+      },
+      "tool_names": [
+        "list_projects",
+        "query_wiki",
+        "reindex_project"
+      ],
+      "concurrent_process_check": {
+        "clients": 12,
+        "server_pid_before": 2198209,
+        "server_pid_after": 2198209,
+        "server_alive_after_clients": true,
+        "children_before": [],
+        "children_after": []
+      },
+      "occupied_port": {
+        "second_server_pid": 2198291,
+        "second_server_exit_code": 3,
+        "active_ipv4_listeners": [
+          "127.0.0.1"
+        ]
+      },
+      "invalid_token_startup": {
+        "short token": 2,
+        "permissive mode": 2
+      },
+      "persisted_index_restart": {
+        "previous_server_pid": 2198209,
+        "restart_server_pid": 2198445,
+        "query_fact_found": true,
+        "reindexed_after_restart": false
+      }
+    },
+    "failure": null,
+    "server_pids": [
+      2198209,
+      2198291,
+      2198349,
+      2198398,
+      2198445
+    ],
+    "memory": [
+      {
+        "pid": 2198209,
+        "rss_kib": 130072
+      },
+      {
+        "pid": 2198209,
+        "rss_kib": 173196
+      },
+      {
+        "pid": 2198445,
+        "rss_kib": 130096
+      }
+    ],
+    "rerun": "grimoire-mcp/.venv/bin/python grimoire-mcp/tests/e2e_shared_runtime.py --output /tmp/grimoire-shared-runtime.json"
+  },
+  "live_tools": {
+    "checks": [
+      {
+        "mode": "shared HTTP",
+        "tools": [
+          "list_projects",
+          "query_wiki",
+          "reindex_project"
+        ],
+        "project_count": 11,
+        "query_passed": true,
+        "seconds": 0.043
+      },
+      {
+        "mode": "legacy stdio",
+        "tools": [
+          "list_projects",
+          "query_wiki",
+          "reindex_project"
+        ],
+        "project_count": 11,
+        "query_passed": true,
+        "seconds": 1.121
+      }
+    ],
+    "credentials_recorded": false
+  },
+  "before_cleanup": {
+    "timestamp": "2026-09-25T17:41:21Z",
+    "legacy_processes": 74,
+    "pss_mib": 303.862,
+    "swap_pss_mib": 6357.445,
+    "systemwide_zram": {
+      "logical_mib": 31071.227,
+      "compressed_mib": 8363.818,
+      "allocated_ram_mib": 8564.039
+    }
+  },
+  "after_cleanup": {
+    "timestamp": "2026-09-25T17:41:53Z",
+    "process_count": 1,
+    "total": {
+      "rss_mib": 127.652,
+      "pss_mib": 121.256,
+      "private_mib": 121.215,
+      "swap_pss_mib": 0.0
+    },
+    "systemwide_zram": {
+      "logical_mib": 24938.25,
+      "compressed_mib": 6618.148,
+      "allocated_ram_mib": 8068.758
+    }
+  },
+  "cleanup": {
+    "terminated_count": 74,
+    "remaining": [],
+    "signal": "SIGTERM",
+    "selection": "Exact legacy command and Codex parent, with process start times and pidfds."
+  },
+  "configuration": {
+    "codex_transport": "streamable_http",
+    "url": "http://127.0.0.1:8767/mcp",
+    "unrelated_settings_preserved": true,
+    "private_backup_created": true,
+    "user_service_enabled": true,
+    "refresh_timer_enabled": true
+  },
+  "limits": [
+    "SwapPss is uncompressed logical swap, not physical RAM.",
+    "Systemwide zram changes also include unrelated activity and allocator effects.",
+    "Existing desktop MCP connections need a Codex restart to adopt the new transport.",
+    "Simultaneous login startup ordering was not tested.",
+    "Legacy stdio clients still start independent servers."
+  ],
+  "after_live_reindex": {
+    "timestamp": "2026-09-25T17:44:13Z",
+    "process_count": 1,
+    "total": {
+      "rss_mib": 167.789,
+      "pss_mib": 161.392,
+      "private_mib": 161.352,
+      "swap_pss_mib": 0.0
+    },
+    "systemwide_zram": {
+      "logical_mib": 24928.988,
+      "compressed_mib": 6615.335,
+      "allocated_ram_mib": 8068.336
+    }
+  },
+  "final_tool_checks": {
+    "final_http_reindex": true,
+    "new_wiki_note_searchable": true,
+    "server_reachable_after_cleanup": true
+  },
+  "review": {
+    "blocking_findings": 0,
+    "operational_note": "Confirm authenticated readiness; systemd Type=simple can be active before the listener opens."
+  }
+}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Shared local Grimoire MCP server
+
+[Service]
+Type=simple
+WorkingDirectory=@@PROJECT_DIR@@
+Environment="WIKI_RAG_PROJECTS_ROOT=@@PROJECTS_ROOT@@"
+Environment="WIKI_RAG_HOME=@@INDEX_HOME@@"
+ExecStart=@@PROJECT_DIR@@/grimoire-mcp/.venv/bin/grimoire-mcp serve-http --port @@PORT@@ --token-file @@TOKEN_FILE@@
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

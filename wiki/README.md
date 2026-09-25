@@ -1,7 +1,45 @@
-# Project Wiki
+# Grimoire project wiki
 
-This repo keeps durable project documentation in decimal-numbered markdown files.
-Use it as the canonical record of what changed, why, and how to verify it.
+## Project orientation
+
+Grimoire keeps project knowledge in repository-owned Markdown wikis.
+Standalone and coordinating agents read relevant notes before work. A
+delegated worker can use sufficient wiki context and source paths from its
+coordinator, then read more when needed. Coordinators own the final wiki
+updates. `grimoire-mcp` searches registered project wikis with local BM25
+indexes. File tools remain sufficient when MCP is unavailable.
+
+Use these terms consistently:
+
+- **Project wiki:** The `wiki/` directory in a project checkout. It is the
+  source of project decisions and work notes.
+- **Index generation:** A published copy of indexed wiki text. Search results
+  refer to this copy until the next refresh.
+- **Shared runtime:** The local HTTP MCP service used by multiple clients.
+  Legacy stdio clients can still run separate processes.
+
+Current state: The modernization is deployed in the main checkout and shared
+service. Registered project guidance has been migrated. Read the
+[specification](../docs/superpowers/specs/2026-09-25-grimoire-modernization-spec.md)
+and [[21.03 Grimoire Modernization]] before changing this work. Read
+[[21.01 Efficient Indexing and Project Rollout]]
+for the index and adoption design. Read [[21.02 Shared MCP Runtime]] before
+changing service behavior. Read [[31.01 Grimoire Wiki-RAG and Hermes Boundary]]
+for integration limits.
+
+Keep the project wiki portable across agent harnesses. Keep BM25 local. Use the
+active checkout to verify code and configuration facts. Do not put credentials
+or host-specific settings in tracked files. Do not replace the shared HTTP
+registration with a spawn-per-client Codex registration. The refresh timer
+rebuilds indexes; it does not upgrade agent contracts.
+
+Search this wiki before asking the user to repeat a project decision or term.
+Read the numbering reference below only when you need to allocate a note number.
+
+## Numbering reference
+
+This repo keeps durable project documentation in decimal-numbered Markdown files.
+Use it as the record of what changed, why, and how to verify it.
 
 The numbering system is inspired by [Johnny.Decimal](https://johnnydecimal.com/)
 — a simple, sortable way to organize information where the tens digit is a
@@ -47,14 +85,11 @@ File names use decimal numbers:
 Use the next available number in the most relevant folder. Prefer updating an
 existing note when the topic already exists.
 
-## Agent Rule
+## Note rule
 
-Any agent making meaningful project changes must create or update a wiki
-note. Each note should cover:
 
-- what changed
-- why it changed
-- how to verify it
-- rollback notes, when relevant
-
-If no wiki update is needed, the agent must say why in its final response.
+The coordinator ensures that each meaningful project change has a note. An
+agent that works alone or a coordinator updates the note. A worker returns
+draft wiki changes unless assigned a specific note. Include what changed, why,
+how to verify it, and rollback steps when relevant. The final response must
+name the changed wiki files or say why no note was needed.

@@ -1,164 +1,71 @@
-# Grimoire — Agent Project Library
-
-Any coding agent working in this project must follow this file. It works with
-Claude Code, Cursor, Copilot, Aider, OpenCode, Codex, and any other harness —
-rename it to the convention your harness expects if needed (CLAUDE.md,
-.cursorrules, .github/copilot-instructions.md, AIDER.md, etc.).
-
-The decimal wiki numbering is inspired by [Johnny.Decimal](https://johnnydecimal.com/)
-— a simple, sortable system where the tens digit is a category area and the
-decimal is an ID within it. The full 00-99 range is available.
-
----
-
-## Bootstrap (first time only)
-
-If `wiki/` does not exist in this project root, bootstrap it now:
-
-1. Copy the wiki template into place:
-   - If `wiki-template/` exists here: `cp -r wiki-template wiki`
-   - If this is a fresh project with no template, create the structure manually:
-     ```
-     wiki/
-     ├── README.md                    (copy numbering scheme from wiki-template/README.md)
-     ├── 00-09 System & Meta/
-     │   ├── 01 Project Conventions/
-     │   └── 02 Wiki Index/
-     ├── 10-19 Conversations & Decisions/
-     │   ├── 11 Key Decisions/
-     │   └── 12 Session Logs/
-     │       └── 12.01 Session Log Index.md
-     ├── 20-29 Implementation & Operations/
-     │   ├── 21 Implementation Notes/
-     │   └── 22 Workflows/
-     ├── 30-39 Integrations & Tooling/
-     │   ├── 31 Tool Configs/
-     │   └── 32 Integration Notes/
-     ├── 40-89 ···  (project-specific categories — add folders as needed)
-     └── 90-99 Archive/
-         └── 91 Historical Scripts/
-     ```
-2. Confirm `wiki/README.md` and `wiki/10-19 Conversations & Decisions/12 Session Logs/12.01 Session Log Index.md` exist.
-3. Ask the user: "What does this project do?" and update the **Scope** section below with a one-line description.
-4. Report: "Grimoire wiki bootstrapped at `wiki/`."
-
-If `wiki/` already exists, skip bootstrap and proceed to **Pre-Work Checklist**.
-
----
-
-## Default Behavior
-
-- Be concise.
-- Read before editing.
-- Verify important claims with tools.
-- Never print secrets.
-- Ask before destructive git, machine-level, or security-sensitive changes.
-- Do not commit, push, reset, release, or rewrite history unless explicitly asked.
-
----
+# Project instructions
 
 ## Scope
 
-<!-- Customize this section for your project -->
-
-This project is the canonical home for the Grimoire agent project library,
-its per-project wiki contract, and the local grimoire-mcp wiki-RAG service.
+This project contains the Grimoire agent project library, its portable wiki
+contract, and the local `grimoire-mcp` search service.
 
 ---
 
-## Grimoire Gate
+## Project safety
 
-Agents must maintain the project wiki in `wiki/` using the decimal numbering
-system described in `wiki/README.md`.
+- Read relevant files before editing. Check the Git status and important
+  configuration first.
+- Never print secrets.
+- Ask before destructive Git, machine-level, or security-sensitive changes.
+- Do not commit, push, reset, release, or rewrite history unless asked.
 
-Before editing:
+## Required wiki workflow
 
-- Inspect `wiki/` for relevant project context.
-- Reuse or update existing notes when the topic already exists.
+- An agent that works alone reads `wiki/README.md` and the notes for the task
+  topic before work. A coordinator does the same before it assigns work.
+  Search the wiki before asking the user to repeat a decision or explain a term.
+- A worker may use sufficient wiki context and source paths from the
+  coordinator. It reads more notes only when needed.
+- After a topic change or context loss, an agent that works alone repeats this
+  initial wiki read. A coordinator does the same. A continuing worker uses new,
+  sufficient wiki context and source paths from the coordinator. It reads more
+  notes only when needed.
+- Use ordinary file tools to search and read `wiki/` when MCP search is not
+  available. MCP search covers registered project indexes. It can return old
+  content or content from another checkout. Read the matching file in the
+  active checkout before you use it to describe current checkout facts.
+- If an MCP result marks a passage as incomplete, call `read_wiki_passage` with
+  its project, generation, and chunk ID. Continue from each returned offset
+  until the passage is complete. If its generation is stale, query again for a
+  current reference. If passage retrieval is not available, read the source file
+  with ordinary file tools. Do not use an incomplete excerpt as evidence.
+- The coordinator gives each worker the task limits, relevant wiki context,
+  and source paths. A worker returns findings and draft wiki changes. It edits
+  a wiki note only when the coordinator assigns that note.
+- After meaningful work, an agent that works alone or a coordinator updates
+  the note. Record changed behavior, configuration, decisions, corrections,
+  and known failures. State what changed, why, and how to verify it. Add
+  rollback steps when relevant. Add one short link to the session log. Use the
+  numbering reference in `wiki/README.md` when creating a note.
+- The coordinator assigns note numbers, updates the session log, and makes the
+  final wiki edits. It can assign a specific note to a worker.
+- If no project knowledge changed, do not add a note. Say why in your final
+  response.
+- In the final response, state the work and verification. An agent that works
+  alone or a coordinator names the wiki files changed. If it makes no wiki
+  update, it explains why. A worker reports draft wiki changes sent to the
+  coordinator or the note it was assigned to edit.
 
-During meaningful work:
+If `wiki/README.md` does not exist, an agent that works alone or a coordinator
+copies `wiki-template/` or runs Grimoire's `setup.sh`. If neither is available,
+create `wiki/README.md` and `wiki/10-19 Conversations & Decisions/12 Session Logs/12.01 Session Log Index.md`.
+Do this before work. Put the project summary and local constraints in
+`wiki/README.md`.
 
-- Create or update a decimal-numbered markdown note for code, config, workflow,
-  architecture, policy, dependency, integration, deployment, or debugging
-  changes.
-- Record what changed, why it changed, how to verify it, and rollback notes
-  when rollback is relevant.
-- Keep project-specific notes inside this repo's `wiki/`.
+## Public technical writing
 
-Before final response:
-
-- Report which `wiki/` file was created or updated.
-- If no wiki note was needed, explicitly say why.
-
-Trivial read-only inspection, small formatting-only edits, and direct answers
-that do not change project state may skip a wiki update, but the final response
-must say that no project documentation changed.
-
----
-
-## Pre-Work Checklist
-
-Before making any changes:
-
-1. Read `AGENTS.md`, the project `README.md`, and `wiki/README.md`.
-2. Scan `wiki/` for notes relevant to the task — especially in the topic's
-   folder (Key Decisions, Implementation Notes, Workflows, etc.).
-3. Check current state: git branch/status when available, important config
-   files, and existing wiki notes.
-4. If you are unsure about project conventions or architecture, ask the user
-   before editing.
-
----
-
-## Wiki Update Workflow
-
-After meaningful changes (code, config, workflow, architecture, deployment,
-integration, debugging, or policy):
-
-1. **Inspect** `wiki/README.md` for the numbering scheme and scan the relevant
-   topic folder for existing notes. The full 00-99 number space is available;
-   these categories are predefined:
-   - `00-09 System & Meta/01 Project Conventions/`
-   - `00-09 System & Meta/02 Wiki Index/`
-   - `10-19 Conversations & Decisions/11 Key Decisions/`
-   - `10-19 Conversations & Decisions/12 Session Logs/`
-   - `20-29 Implementation & Operations/21 Implementation Notes/`
-   - `20-29 Implementation & Operations/22 Workflows/`
-   - `30-39 Integrations & Tooling/31 Tool Configs/`
-   - `30-39 Integrations & Tooling/32 Integration Notes/`
-   - `90-99 Archive/91 Historical Scripts/`
-   - `40-89` — available for project-specific categories; create a folder
-     and start numbering from `.01` when needed.
-
-2. **Update or create** a decimal-numbered note:
-   - If a note already covers the topic, **update it in place** (append to it,
-     add a dated section).
-   - Otherwise, create the **next decimal number** in the most relevant folder
-     (e.g. if `21.01.md` and `21.02.md` exist, create `21.03 New Topic.md`).
-
-3. **Keep the note short.** Cover:
-   - What changed
-   - Why it changed
-   - How to verify it
-   - Rollback notes (when relevant)
-
-4. **Update the session log index.** Append a line to
-   `wiki/10-19 Conversations & Decisions/12 Session Logs/12.01 Session Log Index.md`:
-   ```
-   - YYYY-MM-DD (short description): What happened. [[##.## Note Name]]
-   ```
-
-5. **Report** in your final response which wiki file was created or updated.
-   If no note was needed, say why (e.g. "read-only inspection — no project
-   documentation changed").
-
----
-
-## Skipping a Wiki Update
-
-Skip for:
-- Read-only inspection or Q&A about the project
-- Formatting-only edits that don't change behavior
-- Trivial typo fixes with no architectural impact
-
-Even when skipping, state that no project documentation changed.
+For English technical text prepared for public use or external submission,
+follow ASD-STE100 Issue 9 (2025-01-15). Use the official [rules and
+dictionary](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf).
+Use approved words with their approved meanings and parts of speech. Use one
+term for each technical concept. Prefer active voice, clear steps, and short
+sentences. Keep code, commands, identifiers, paths, URLs, logs, and quotations
+unchanged. Review the text against the standard before delivery. Do not claim
+verified compliance without a complete review. This writing rule does not
+authorize publication or submission.

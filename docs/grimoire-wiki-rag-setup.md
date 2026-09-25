@@ -13,7 +13,7 @@ registration, 12-hour refresh, verification, and rollback.
 | Full local project folder | `$PROJECT_DIR` | Complete Git checkout, including `.git`; the host-specific absolute path is kept out of the public repository |
 | MCP package | `$PROJECT_DIR/grimoire-mcp` | `uv` project and console entry point |
 | Project wiki | `$PROJECT_DIR/wiki` | Bootstrapped from `wiki-template/` |
-| Derived index home | `$WIKI_RAG_HOME` or `$HOME/.wiki-rag` | Local, disposable JSONL and metadata |
+| Derived index home | `$WIKI_RAG_HOME` or `$HOME/.wiki-rag` | Local, disposable prepared BM25 generations and metadata |
 | Hermes home surveyed | `$HERMES_HOME` | Read-only survey target |
 
 The checkout is nested below the task workspace. Its parent can serve as a
@@ -26,17 +26,36 @@ operator-local variables. Set them to the corresponding paths on the host;
 the public repository intentionally does not record a user's workstation
 layout.
 
+To add a project wiki, run `./setup.sh /path/to/project` from this checkout.
+Copy `AGENTS.md` into the project root and add a one-sentence scope. The new
+`wiki/README.md` is the project entry point. It contains the topic list and the
+numbering reference for new notes. See the [wiki template](../wiki-template/README.md).
+
 ## 2. What “wiki-RAG” means
 
-`grimoire-mcp` is a local stdio MCP server. It reads existing Markdown/text,
-builds a derived BM25 representation, and serves search results. It does not
-author documentation, upload documentation, or expose an HTTP service.
+`grimoire-mcp` is a local MCP server. It reads Markdown and text files, builds
+a derived BM25 index, and returns search results. It does not write or upload
+source documentation. Use the [shared local runtime](grimoire-shared-runtime.md)
+for Codex and multiple clients. The authenticated HTTP endpoint uses one process.
+The stdio mode starts one process per client and is for clients that require it.
 
 The tools are:
 
 - `list_projects`: discovered projects, wiki roots, file counts, and index state.
-- `query_wiki`: BM25 search within one named project.
+- `query_wiki`: BM25 search of one registered project's index.
+- `read_wiki_passage`: fetch the rest of a search result that has more text.
 - `reindex_project`: rebuild one project or all projects with `project="*"`.
+
+MCP search uses registered project indexes. The index can be out of date or can
+refer to another checkout. Read the matching file in the active checkout before
+you use an indexed result as a current project fact. If MCP search is not
+available, use file tools to search and read `wiki/`.
+
+When `query_wiki` marks an excerpt as incomplete, call `read_wiki_passage` with
+the result's project, generation, and chunk ID. Use each returned offset until
+the tool reports `complete: true`. If its generation is stale, run the search
+again and use the new reference. The passage tool does not accept arbitrary file
+paths. Do not use an incomplete excerpt as evidence.
 
 Discovery uses `WIKI_RAG_PROJECTS_ROOT`. Every direct child directory is a
 project. Sources default to `wiki/`, with optional `Project Vault/`,
@@ -49,15 +68,15 @@ The derived layout is:
 ```text
 $WIKI_RAG_HOME/
 ├── indexes/<project-slug>/
-│   ├── documents.jsonl
-│   └── index.json
+│   ├── index.json                 # atomic current-generation pointer/counts
+│   └── generations/<id>/          # prepared BM25 files and manifest.json
 └── logs/
     ├── server.log
     └── refresh.log
 ```
 
-`documents.jsonl` contains indexed source text and path metadata; `index.json`
-contains counts, roots, and the indexed timestamp. Treat the derived home as
+Generation files contain indexed source text, path metadata and prepared BM25
+data; `index.json` contains counts, roots, generation ID and the indexed timestamp. Treat the derived home as
 sensitive as the source projects and rebuild it rather than committing it.
 
 ## 3. Hermes survey and strict non-change boundary
@@ -132,8 +151,8 @@ directories, exports `WIKI_RAG_PROJECTS_ROOT` and `WIKI_RAG_HOME`, and invokes:
 uv run --directory /absolute/path/to/grimoire/grimoire-mcp grimoire-mcp reindex '*'
 ```
 
-It does not call Hermes, alter source Markdown, commit files, or contact a
-network service. It appends output to `$WIKI_RAG_HOME/logs/refresh.log`.
+It does not call Hermes or commit files. Indexing leaves source Markdown intact;
+optional automatic adoption adds missing wiki files and agent guidance first. It appends output to `$WIKI_RAG_HOME/logs/refresh.log`.
 
 Record the exact runtime counts from the current run. Do not substitute the
 historical 20-index/363-file/915-chunk evidence from the earlier host.
@@ -153,19 +172,23 @@ The gate is:
 
 1. The expected project appears in refresh output.
 2. Its `index.json` reports a positive file count when its wiki has content.
-3. `documents.jsonl` exists and is non-empty.
+3. The generation referenced by `index.json` exists and queries return results.
 4. `git status` shows no source-wiki change caused by indexing.
 5. A bounded `query_wiki` request returns a hit from that project.
+6. If a result marks its text as incomplete, `read_wiki_passage` returns the
+   remaining text through its completion marker.
 
-For future harness use, the server is started as stdio MCP:
+Use the shared authenticated HTTP endpoint for Codex and multiple clients. See
+the [shared local runtime guide](grimoire-shared-runtime.md). Use stdio only for
+clients that require it. Do not bind the server to a public listener.
+
+For a standalone stdio client, start the server with:
 
 ```bash
 "$UV_BIN" run \
   --directory "$PROJECT_DIR/grimoire-mcp" \
   grimoire-mcp
 ```
-
-Do not bind it to a public listener.
 
 ### Verified current checkout
 
@@ -211,7 +234,9 @@ The corresponding future removal command is:
 ## 8. Temporary 12-hour refresh
 
 The repository includes a user-level systemd service and timer separate from
-Hermes. It refreshes only the derived index; it never writes Markdown. The
+Hermes. By default it refreshes only the derived index. With
+`WIKI_RAG_AUTO_SETUP=1`, it first creates missing wiki scaffolding and agent
+guidance. The
 schedule is local midnight and noon:
 
 ```text
@@ -280,7 +305,8 @@ scripts/disable-wiki-rag-timer.sh --remove-files
 ```
 
 This timer is a maintenance convenience, not a documentation author. Humans
-and agents still update each project under the Grimoire Gate.
+and agents still update each project under the required wiki workflow in
+`AGENTS.md`.
 
 ## 9. Failure diagnosis
 
@@ -321,10 +347,11 @@ manual refresh command until the session bus is available.
 
 ## 10. Security and complete rollback
 
-Source files stay in their repositories. The local JSONL index can contain
+Source files stay in their repositories. The local prepared index can contain
 source text, so protect `$WIKI_RAG_HOME`. Do not publish local config, indexes,
-logs, credentials, or private project documentation. The MCP server remains
-stdio-only, and the timer runs without elevated privileges.
+logs, credentials, or private project documentation. The shared HTTP endpoint
+binds to `127.0.0.1` and requires a private token. The timer runs without
+elevated privileges.
 
 Rollback the indexing setup without touching source wikis or Hermes:
 
@@ -340,7 +367,76 @@ two named timer units. They preserve the checkout, source wikis, and Hermes.
 
 ## 11. Operational contract
 
-After meaningful work, agents update or create a decimal wiki note and report
-its path. Run a manual reindex when immediate searchability matters; otherwise
-the 00:00/12:00 timer refreshes the derived index. The timer does not replace
-the Grimoire Gate and does not create source documentation.
+An agent that works alone and a coordinator read `wiki/README.md` and the notes
+for the task topic before work. A worker may use sufficient wiki context and
+source paths from the coordinator. Read more notes only when needed. Search
+with ordinary file tools when MCP is unavailable. Use the active checkout for
+current facts. Read each incomplete passage through `read_wiki_passage` before
+you use it as evidence.
+
+After a topic change or context loss, an agent that works alone and a
+coordinator repeat the initial wiki read. A continuing worker uses new,
+sufficient wiki context and source paths from the coordinator. Read more notes
+only when needed. After meaningful work, agents that work alone and coordinators
+update a decimal wiki note and add a short session-log link. Workers return
+findings and draft wiki changes unless assigned a specific note. The coordinator
+assigns note numbers, updates the session log, and makes final wiki edits. It
+can assign a specific note to a worker.
+
+Run a manual reindex when immediate searchability matters; otherwise the
+00:00/12:00 timer refreshes the derived index. The timer does not replace the
+agent contract.
+
+## 12. Collection rollout and efficient refresh (2026-09-08)
+
+Use `python scripts/setup-projects.py --projects-root /path/to/projects` to preview
+adoption, then add `--apply` to create missing wiki files and agent guidance.
+Optional `--scopes-json /path/to/scopes.json` supplies directory-name to one-line
+scope mappings. Existing wikis and agent instructions are preserved; projects
+with redirected managed paths are skipped. Repeat preview should report zero
+files. New projects need this adoption step. Set `WIKI_RAG_AUTO_SETUP=1` in the
+ignored local environment file to run it before every scheduled/manual refresh.
+
+The local collection now contains five adopted projects. The ignored environment
+file points at the actual collection, and the existing timer uses that file.
+Refresh reports rebuilt versus unchanged projects. Hashing still reads sources,
+but unchanged projects skip chunking, BM25 building, and index writes. See
+`grimoire-mcp/README.md` for the persistence/cache protocol and regression commands.
+
+The local Codex registration uses the authenticated shared HTTP endpoint. It
+uses one server process and one index cache. The private client configuration
+and token are outside this repository. Restart Codex to load a changed
+registration. This registration does not configure other harnesses.
+
+## 13. Automatic adoption
+
+The local installation enables `WIKI_RAG_AUTO_SETUP=1`. At midnight and noon the
+refresh wrapper first runs `setup-projects.py --apply` against the collection,
+then indexes it. New direct-child project directories receive missing wiki
+template files, agent guidance, a numbered adoption note and a session-log entry.
+Existing content and gates are preserved. Hidden/generated/symlink directories
+are skipped. With `--scopes-json`, setup puts the supplied scope in each new
+`AGENTS.md` and `wiki/README.md`. Without a supplied scope, it marks the
+description as undocumented. It does not guess architecture facts.
+
+Run `scripts/refresh-wiki-rag.sh` for immediate adoption. Set
+`GRIMOIRE_WIKI_RAG_DRY_RUN=1` to preview commands without writes. To disable
+automatic adoption, change `WIKI_RAG_AUTO_SETUP` to `0` in the local environment
+file. Indexing continues and previously created documentation stays in place.
+
+## 14. Preview a contract upgrade
+
+Run the upgrade preview before you apply it:
+
+```bash
+python scripts/setup-projects.py --projects-root /path/to/projects --upgrade
+python scripts/setup-projects.py --projects-root /path/to/projects --upgrade --apply
+```
+
+The preview shows changed lines and does not write files.
+The upgrade accepts exact stock Grimoire sections. It skips files with edited
+or incomplete sections. It keeps unrelated instructions and the project Scope.
+Each changed project gets `AGENTS.md.grimoire-backup` with the original bytes.
+Inspect that backup before you use it to restore a contract. Preserve later
+edits when you restore a file. The scheduled refresh runs setup without
+`--upgrade`, so it does not change existing contracts.

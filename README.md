@@ -4,261 +4,165 @@
 
 <h1 align="center">Grimoire — Agent Project Library</h1>
 
-**A project library that every AI coding agent reads from and writes to — durable, searchable, and living beside the code.**
+Grimoire stores project knowledge in Markdown files beside the code. The
+`AGENTS.md` contract tells agents when to read and update the wiki. The optional
+`grimoire-mcp` service searches indexed wikis across projects.
 
-Grimoire is a three-layer system that turns your project's `wiki/` folder into a living library agents consult before they act and contribute to after meaningful changes. Cross-project search comes from a lightweight MCP server.
+## The three parts
 
----
+### Project wiki
 
-## The Three Layers
+Each project has a `wiki/` directory. Its `README.md` is the entry point. It
+holds a short project summary, terms, current work, constraints, and links to
+useful topic notes. An agent that works alone reads it and the notes for the
+task topic before work. A coordinator does the same before it assigns work.
+The numbering reference explains how to name new notes.
 
-```
-┌──────────────────────────────────────────────────┐
-│  Layer 3: grimoire-mcp (cross-project search)    │
-│  BM25 over all project wikis — plug into any     │
-│  agent harness (Claude, Cursor, OpenCode, etc.)  │
-├──────────────────────────────────────────────────┤
-│  Layer 2: Agent Contract (AGENTS.md)             │
-│  One self-contained file: bootstrap, Grimoire     │
-│  Gate, pre-work checklist, wiki update workflow.  │
-├──────────────────────────────────────────────────┤
-│  Layer 1: The Library (wiki/)                    │
-│  Decimal-numbered markdown notes.                │
-│  What changed, why, how to verify, rollback.     │
-└──────────────────────────────────────────────────┘
-```
+Topic notes record decisions and meaningful changes. Each note states what
+changed, why, how to verify it, and how to roll it back when needed.
 
-### Layer 1 — The Library
+### Agent contract
 
-A `wiki/` directory in your project root with decimal-numbered markdown notes,
-inspired by [Johnny.Decimal](https://johnnydecimal.com/). The tens digit is a
-**category** (10-19, 20-29, ...) and the decimal is an **ID** within it:
+Copy `AGENTS.md` into the project root. It gives a portable contract for wiki
+orientation, search, documentation, and final reports. It also covers public
+technical writing. Setup steps and the note numbering reference live in this
+README and in the wiki template.
 
-```
-wiki/
-├── README.md                          # Numbering system + agent rules
-├── 00-09 System & Meta/               # Wiki index, project conventions
-│   ├── 01 Project Conventions/
-│   └── 02 Wiki Index/
-├── 10-19 Conversations & Decisions/
-│   ├── 11 Key Decisions/              # 11.01, 11.02, ...
-│   └── 12 Session Logs/               # 12.01 Session Log Index, 12.02, ...
-├── 20-29 Implementation & Operations/
-│   ├── 21 Implementation Notes/       # 21.01, 21.02, ...
-│   └── 22 Workflows/                  # 22.01, 22.02, ...
-├── 30-39 Integrations & Tooling/
-│   ├── 31 Tool Configs/               # 31.01, 31.02, ...
-│   └── 32 Integration Notes/          # 32.01, ...
-├── 40-89 ···························  # Your project-specific categories
-│                                       #   (create folders as needed)
-└── 90-99 Archive/                     # Retired notes
-    └── 91 Historical Scripts/
-```
+Use the same contract in every harness. If a harness reads a different project
+instruction file, copy the contract into that file. Do not remove the required
+wiki steps.
 
-The full 00-99 number space is available. Projects add their own categories in
-the 40-89 range — just create a folder and start numbering from `.01`.
+### Cross-project search
 
-Each note is short and covers: **what changed, why it changed, how to verify, rollback notes when relevant.**
+`grimoire-mcp` provides local search with BM25. It does not write source wiki
+files. Its tools are:
 
-### Layer 2 — The Agent Contract
+- `list_projects` — show registered projects and index state.
+- `query_wiki` — search one project's indexed wiki.
+- `read_wiki_passage` — read a full indexed passage in bounded parts.
+- `reindex_project` — update one or all project indexes.
 
-One file tells every agent everything it needs:
+Search covers registered project indexes. It can be stale or refer to another
+checkout. Read the matching file in the active checkout before using a result
+as a current project fact. When a result marks a passage as incomplete, read
+each part with `read_wiki_passage`, using its project, generation, and chunk ID,
+until the passage is complete. See the [MCP guide](grimoire-mcp/README.md).
 
-- **`AGENTS.md`** — The single entry point. Contains bootstrap instructions, the "Grimoire Gate" contract (read wiki before editing, write to it after), a pre-work checklist, the wiki update workflow, and rules for when to skip. Self-contained — no other files required.
+## Quick start
 
-A **`setup.sh`** script bootstraps the `wiki/` directory into any project in one command, for both humans and agents.
+### 1. Add the wiki
 
-### Layer 3 — Cross-Project Search (grimoire-mcp)
-
-A standalone [MCP](https://modelcontextprotocol.io/) server that indexes all your project wikis with BM25 (no embeddings, no GPU, deterministic) and exposes three tools to agents:
-
-- `list_projects` — discover available projects and their wiki status
-- `query_wiki` — search a project's wiki with natural language
-- `reindex_project` — rebuild the index after wiki changes
-
----
-
-## Quick Start
-
-### 1. Add the library to your project
-
-Run the bootstrap script from within the grimoire repo:
+Run the setup script from the Grimoire repository:
 
 ```bash
 ./setup.sh /path/to/your-project
 ```
 
-Or, if you're already in your project directory, copy the template manually:
+Or copy the template into your project:
 
 ```bash
-cp -r /path/to/grimoire/wiki-template wiki
+cp -r /path/to/grimoire/wiki-template /path/to/your-project/wiki
 ```
+
+Add a one-sentence project summary, terms, current work, constraints, and links
+to useful notes in `wiki/README.md`.
 
 ### 2. Add the agent contract
 
-Copy `AGENTS.md` into your project root. That's it — it's self-contained:
+Copy the contract to the project root:
 
 ```bash
-cp /path/to/grimoire/AGENTS.md your-project/
+cp /path/to/grimoire/AGENTS.md /path/to/your-project/AGENTS.md
 ```
 
-Customize the **Scope** section with a one-line description of your project.
+Replace the **Scope** section with one sentence about the project. If your
+harness uses another instruction filename, copy the same contract into that
+file. The contract must keep the wiki orientation and update steps.
 
-For harnesses that don't natively read `AGENTS.md`, rename it to the convention
-that harness expects: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`,
-`AIDER.md`, etc.
+### 3. Set up optional search
 
-### 3. (Optional) Set up cross-project search
-
-The `grimoire-mcp/` server lets agents search across all your projects. See its [README](grimoire-mcp/README.md) for setup.
+Install the local MCP package:
 
 ```bash
 cd grimoire-mcp
 uv sync
 ```
 
-Then add to your agent's MCP config:
+Set `WIKI_RAG_PROJECTS_ROOT` to the directory that contains your project
+directories. See the [shared local runtime guide](docs/grimoire-shared-runtime.md)
+to connect multiple clients to one authenticated HTTP service. Use that HTTP
+connection for Codex. Each stdio client starts its own process; use stdio only
+when a client requires it. See the [MCP guide](grimoire-mcp/README.md) for
+other connection options.
 
-```json
-{
-  "mcpServers": {
-    "grimoire-mcp": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/grimoire-mcp", "grimoire-mcp"]
-    }
-  }
-}
+### 4. Start project work
+
+An agent that works alone reads `wiki/README.md` and the notes for the task
+topic before work. A coordinator does the same before it assigns work.
+Search the wiki before asking the user to repeat a decision or explain a term.
+Use file tools if MCP search is unavailable.
+
+A worker may use sufficient wiki context and source paths from the coordinator.
+It reads more notes only when needed. After a topic change or context loss, an
+agent that works alone repeats this initial wiki read. A coordinator does the
+same. A continuing worker uses new, sufficient wiki context and source paths
+from the coordinator. It reads more notes only when needed.
+
+After meaningful work, agents that work alone and coordinators update a topic
+note. They add one short link to the session log. A worker returns findings and
+draft wiki changes. It edits a wiki note only when the coordinator assigns it.
+The coordinator assigns note numbers, updates the session log, and makes final
+wiki edits. It can assign a specific note to a worker.
+If no project knowledge changed, state why no wiki note was needed.
+
+## Set up a project collection
+
+The setup script previews changes by default. Add `--apply` to write them:
+
+```bash
+python scripts/setup-projects.py --projects-root /path/to/projects
+python scripts/setup-projects.py --projects-root /path/to/projects --apply
 ```
 
-Set `WIKI_RAG_PROJECTS_ROOT` to wherever you keep your projects (default: `~/projects`).
+The script adds missing wiki files and agent guidance. It keeps existing files.
+Use `--scopes-json` with a JSON object to set one-line descriptions for new
+contracts. Repeated runs do not add duplicate files. Set
+`WIKI_RAG_PROJECTS_ROOT` to the same directory, then refresh the indexes.
 
-### 4. Start using it
+To adopt new projects during scheduled refreshes, set `WIKI_RAG_AUTO_SETUP=1` in
+the ignored `config/wiki-rag.env` file. The refresh runs setup before indexing.
+Set the value to `0` to disable adoption. The refresh continues to update
+indexes.
 
-The next time an agent starts work in your project, it reads `AGENTS.md` and:
+For full install, verification, and rollback steps, see the
+[wiki-RAG setup guide](docs/grimoire-wiki-rag-setup.md).
 
-1. If `wiki/` doesn't exist → runs bootstrap (from the Bootstrap section)
-2. Follows the Pre-Work Checklist → reads wiki/ for context
-3. Does the work
-4. Follows the Wiki Update Workflow → creates or updates a wiki note
-5. Reports which note was changed
+### Upgrade an existing contract
 
-That's it. One file. No harness-specific features needed.
+Preview recognized Grimoire instructions before you change them:
 
----
-
-## How Agents Actually Use This
-
-Here's the flow on any meaningful change:
-
-```
-Agent starts work
-  └─ Reads AGENTS.md
-       ├─ If wiki/ doesn't exist: runs bootstrap (setup.sh or manual copy)
-       ├─ Reads wiki/README.md for numbering scheme
-       └─ Scans wiki/ for relevant project context
-
-Agent does work (edit code, change config, update deps, etc.)
-
-Agent finishes
-  └─ Follows Wiki Update Workflow in AGENTS.md
-       ├─ Checks wiki/ for existing notes on the topic
-       ├─ Updates existing note OR creates next decimal note
-       ├─ Updates 12.01 Session Log Index
-       └─ Reports: "Updated wiki/20-29.../21.03 Thing I Changed.md"
+```bash
+python scripts/setup-projects.py --projects-root /path/to/projects --upgrade
+python scripts/setup-projects.py --projects-root /path/to/projects --upgrade --apply
 ```
 
-A week later, another agent starts work. It reads the wiki, finds `21.03`, and
-immediately understands what was done and why — no chat history needed.
+The preview shows changed lines and does not write files.
+The upgrade accepts exact stock Grimoire sections and skips edited or unclear
+files. It keeps unrelated instructions and saves the original `AGENTS.md` bytes
+as `AGENTS.md.grimoire-backup` in each changed project. Inspect the preview
+before you apply it. Scheduled index refreshes do not run contract upgrades.
 
----
-
-## Philosophy
-
-### Why not just use chat history?
-
-Chat sessions are ephemeral. They die when the context window fills, when you switch models, or when you start a new session. The wiki is **durable project knowledge** — it lives in the repo beside the code.
-
-### Why decimal numbering?
-
-Simple, sortable, and unambiguous. `11.01` comes before `11.02`. No date stamps,
-no titles in filenames — just numbers. The folder structure provides the topic
-category. This makes it trivial for agents to find the next available number and
-for humans to scan.
-
-The numbering is inspired by [Johnny.Decimal](https://johnnydecimal.com/), a
-system for organizing information where the tens digit is a **category** area
-(10-19, 20-29, ... up to 99) and the decimal is an **ID** within that category.
-Grimoire pre-defines categories for common project needs and leaves the 40-89
-range open for project-specific use.
-
-### Why BM25 instead of embeddings?
-
-- **Zero dependencies.** No embedding model to download, no GPU needed, no first-run stall.
-- **Deterministic.** Same query always returns the same results. Easy to debug.
-- **Fast.** Sub-second queries on wikis with hundreds of files.
-- **Local only.** Nothing leaves your machine.
-
-### Why per-project wikis instead of one big knowledge base?
-
-Project knowledge belongs beside the project. When you move, archive, or share a project, its wiki goes with it. No central database to maintain or migrate.
-
----
-
-## Files in This Kit
+## Files
 
 | File | Purpose |
 |---|---|
-| `README.md` | This guide |
-| `AGENTS.md` | **Single entry point** — bootstrap, Grimoire Gate, pre-work checklist, wiki update workflow (self-contained, no other files needed) |
-| `setup.sh` | Bootstrap script — copies `wiki-template/` into any project in one command |
-| `wiki-template/` | Drop-in wiki folder structure |
-| `grimoire-mcp/` | Standalone MCP server for cross-project search |
-| `skills/` | Optional — this repo's own internal skills (not needed by consumer projects; everything is inlined in `AGENTS.md`) |
-
----
-
-## Adopting Incrementally
-
-You don't need all three layers on day one:
-
-1. **Start with just the wiki folder.** Even without agent enforcement, having a place to write down what changed and why is valuable. Run `./setup.sh` or copy `wiki-template/` manually.
-2. **Add AGENTS.md.** This is the force-multiplier — agents start reading and writing the library automatically. One file, self-contained.
-3. **Add grimoire-mcp when you have multiple projects.** Cross-project search becomes useful when you have 5+ wikis and agents need to find information across them.
-
----
-
-## Compatible Agent Harnesses
-
-The system is harness-agnostic. **`AGENTS.md` is the only file an agent needs to
-read** — it contains bootstrap, intake, and update workflows in one place.
-
-Works with any agent that reads project-level instruction files:
-
-- **Claude Code** (reads `CLAUDE.md` — rename or symlink `AGENTS.md`)
-- **Cursor** (reads `.cursorrules` — rename or symlink)
-- **Codex Desktop** (reads `AGENTS.md` natively)
-- **OpenCode** (reads `AGENTS.md` natively)
-- **Aider** (reads `AIDER.md` or `CONVENTIONS.md` — rename or symlink)
-- **GitHub Copilot** (reads `.github/copilot-instructions.md` — rename or symlink)
-- **Reasonix** (reads `AGENTS.md` natively)
-
-For harnesses that don't natively read `AGENTS.md`, rename it to the convention
-file that harness expects, or create a symlink.
-
-The `grimoire-mcp` server works with any harness that supports MCP tools (Claude,
-Cursor, OpenCode, Grok, etc.).
-
-### How a user hands this to any agent
-
-The user gives an agent the grimoire repo and says:
-
-> "Set up Grimoire in my project at `/path/to/my-project`."
-
-The agent reads `AGENTS.md`, finds the **Bootstrap** section, runs `./setup.sh`,
-and follows the Pre-Work Checklist. No harness-specific features needed.
-
----
+| `AGENTS.md` | Portable wiki contract for project agents |
+| `setup.sh` | Copy the wiki template into one project |
+| `scripts/setup-projects.py` | Preview or apply wiki setup across projects |
+| `wiki-template/` | Starter wiki and numbering reference |
+| `grimoire-mcp/` | Local server for cross-project wiki search |
+| `skills/` | Optional workflow guides for agents that support skills |
 
 ## License
 
-MIT. Use it, fork it, adapt it.
+MIT.
